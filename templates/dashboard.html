@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vala Vala — Admin Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --black:#0a0a0a;
+      --warm-gray:#1e1b18;
+      --accent:#c8a96e;
+      --accent-dark:#a8863e;
+      --white:#f5f2ee;
+      --mid-gray:#6b6560;
+    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{
+      background:var(--black);
+      color:var(--white);
+      font-family:'DM Sans',sans-serif;
+      min-height:100vh;
+    }
+    .sidebar{
+      position:fixed;
+      left:0;top:0;bottom:0;
+      width:260px;
+      background:var(--warm-gray);
+      padding:30px 20px;
+      border-right:1px solid rgba(200,169,110,0.1);
+    }
+    .logo{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:28px;
+      letter-spacing:4px;
+      color:var(--white);
+      text-align:center;
+      margin-bottom:50px;
+    }
+    .logo span{color:var(--accent)}
+    .nav-link{
+      padding:14px 20px;
+      color:var(--mid-gray);
+      text-decoration:none;
+      display:block;
+      border-radius:6px;
+      margin-bottom:6px;
+      transition:all .3s;
+    }
+    .nav-link:hover, .nav-link.active{
+      background:rgba(200,169,110,0.15);
+      color:var(--accent);
+    }
+    .main-content{
+      margin-left:260px;
+      padding:40px;
+    }
+    .header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      margin-bottom:30px;
+    }
+
+    .btn{
+      padding:14px 28px;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      font-weight:600;
+      letter-spacing:1px;
+      font-size:15px;
+      transition:all 0.3s;
+    }
+    .btn-primary{
+      background:var(--accent);
+      color:#000;
+    }
+    .btn-primary:hover{
+      background:#e5c38a;
+      transform:translateY(-2px);
+    }
+    .btn-secondary{
+      background:#555;
+      color:white;
+    }
+    .btn-secondary:hover{
+      background:#666;
+    }
+
+    table{
+      width:100%;
+      border-collapse:collapse;
+      background:var(--warm-gray);
+      border-radius:8px;
+      overflow:hidden;
+    }
+    th, td{
+      padding:16px 20px;
+      text-align:left;
+      border-bottom:1px solid rgba(255,255,255,0.08);
+    }
+    th{
+      background:#151210;
+      color:var(--accent);
+      text-transform:uppercase;
+      font-size:13px;
+    }
+    img{
+      width:60px;
+      height:60px;
+      object-fit:cover;
+      border-radius:4px;
+    }
+
+    /* FIXED MODAL */
+    .modal{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.95);
+      backdrop-filter:blur(12px);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:1000;
+      padding:20px;
+    }
+    .modal-content{
+      background:#25221f;
+      width:100%;
+      max-width:520px;
+      max-height:95vh;
+      border-radius:12px;
+      border:1px solid var(--accent);
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+    .modal-header{
+      padding:25px 30px 15px;
+      text-align:center;
+      border-bottom:1px solid #333;
+    }
+    .modal-body{
+      padding:20px 30px;
+      overflow-y:auto;
+      flex:1;
+    }
+    .modal-footer{
+      padding:20px 30px;
+      border-top:1px solid #333;
+      display:flex;
+      gap:15px;
+    }
+    .form-group{
+      margin-bottom:20px;
+    }
+    label{
+      display:block;
+      margin-bottom:8px;
+      color:var(--accent);
+      font-size:14px;
+    }
+    input, select, textarea{
+      width:100%;
+      padding:14px;
+      background:#1a1714;
+      border:1px solid #555;
+      border-radius:6px;
+      color:white;
+      font-size:15px;
+    }
+    .image-upload{
+      border:2px dashed var(--accent);
+      padding:30px;
+      text-align:center;
+      border-radius:8px;
+      cursor:pointer;
+      background:#1a1714;
+    }
+    #previewImage{
+      max-width:100%;
+      max-height:200px;
+      margin-top:12px;
+      border-radius:6px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <div class="logo">VALA<span>.</span>VALA</div>
+    <a href="#" class="nav-link active">Products</a>
+    <a href="#" class="nav-link" id="ordersBtn">Cart / Orders</a>
+    <a href="#" class="nav-link">Customers</a>
+    <a href="#" class="nav-link">Analytics</a>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+    <div class="header">
+      <h1 style="font-family:Bebas Neue,sans-serif;font-size:42px;letter-spacing:-1px;">Products Management</h1>
+      <button class="btn btn-primary" onclick="showAddModal()">+ Add New Product</button>
+    </div>
+
+    <table id="productsTable">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Name</th>
+          <th>Category</th>
+          <th>Price (MWK)</th>
+          <th>Badge</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- PRODUCT MODAL -->
+  <div class="modal" id="productModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle" style="color:var(--accent);">Add New Product</h2>
+      </div>
+      
+      <div class="modal-body">
+        <form id="productForm" enctype="multipart/form-data">
+          <input type="hidden" id="productId">
+
+          <div class="form-group">
+            <label>Product Image</label>
+            <div class="image-upload" id="uploadArea">
+              <input type="file" id="imageInput" accept="image/*" style="display:none;">
+              <p style="color:var(--accent);">Click to upload image</p>
+              <img id="previewImage" src="" alt="">
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Name</label>
+            <input type="text" id="name" required>
+          </div>
+
+          <div class="form-group">
+            <label>Category</label>
+            <select id="category" required>
+              <option value="tshirt">T-Shirt</option>
+              <option value="hoodie">Hoodie</option>
+              <option value="bag">Bag / Cap</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Price (MWK)</label>
+            <input type="number" id="price" step="0.01" required>
+          </div>
+
+          <div class="form-group">
+            <label>Badge (optional)</label>
+            <input type="text" id="badge" placeholder="Bestseller, New, Limited...">
+          </div>
+
+          <div class="form-group">
+            <label>Description</label>
+            <textarea id="desc" rows="3" required></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" style="flex:1;" onclick="closeModal()">Cancel</button>
+        <button type="button" class="btn btn-primary" style="flex:1;" onclick="saveProduct()" id='saveProduct'>Save Product</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ================== CONFIG ==================
+    function getCSRFToken(name){
+        let cookieValue = null;
+        if(document.cookie && document.cookie !==''){
+            const cookies = document.cookie.split(';');
+            for(let i =0 ; i < cookies.length; i++){
+                const cookie = cookies[i].trim()
+                if(cookie.substring(0,name.length +1)===(name + '=')){
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
+                    break
+                }
+            }
+        } return cookieValue;
+
+    }
+
+
+const API_BASE = '/api/products/';
+
+let products = [];
+let selectedFile = null;
+
+async function fetchProducts() {
+  try {
+    const res = await fetch(API_BASE);
+    data = await res.json();
+    if(data.success){
+      products.splice(0,0,...data.data);
+      renderTable();
+    }
+    
+  } catch (err) {
+    console.error(err);
+  }
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = products.map(p => `
+    <tr>
+      <td><img src="${p.image}" alt="${p.name}"></td>
+      <td>${p.name}</td>
+      <td>${p.category}</td>
+      <td><strong>${parseFloat(p.price).toLocaleString()}</strong></td>
+      <td>${p.badge ? `<span style="background:#c8a96e;color:black;padding:4px 10px;border-radius:12px;">${p.badge}</span>` : '-'}</td>
+      <td>
+        <button class="btn btn-primary" style="padding:6px 14px;font-size:13px;" onclick="editProduct(${p.id})">Edit</button>
+        <button class="btn btn-secondary" style="padding:6px 14px;font-size:13px;" onclick="deleteProduct(${p.id})">Delete</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// Image Upload
+document.getElementById('uploadArea').addEventListener('click', () => document.getElementById('imageInput').click());
+
+document.getElementById('imageInput').addEventListener('change', (e) => {
+  selectedFile = e.target.files[0];
+  if (selectedFile) {
+    const reader = new FileReader();
+    reader.onload = ev => document.getElementById('previewImage').src = ev.target.result;
+    reader.readAsDataURL(selectedFile);
+  }
+});
+
+function showAddModal() {
+  document.getElementById('modalTitle').textContent = 'Add New Product';
+  document.getElementById('productForm').reset();
+  document.getElementById('previewImage').src = '';
+  document.getElementById('productId').value = '';
+  selectedFile = null;
+  document.getElementById('productModal').style.display = 'flex';
+}
+
+function editProduct(id) {
+  const p = products.find(x => x.id === id);
+  if (!p) return;
+  document.getElementById('modalTitle').textContent = 'Edit Product';
+  document.getElementById('productId').value = p.id;
+  document.getElementById('name').value = p.name;
+  document.getElementById('category').value = p.category;
+  document.getElementById('price').value = p.price;
+  document.getElementById('badge').value = p.badge || '';
+  document.getElementById('desc').value = p.desc;
+  document.getElementById('previewImage').src = p.image;
+  selectedFile = null;
+  document.getElementById('productModal').style.display = 'flex';
+}
+
+function closeModal() {
+  document.getElementById('productModal').style.display = 'none';
+}
+
+// Save Product
+async function saveProduct() {
+
+  const SaveBtn = document.getElementById('saveProduct');
+
+  SaveBtn.disabled = true;
+  SaveBtn.innerHTML = 'Saving.......';
+
+  const id = document.getElementById('productId').value;
+
+  let name = document.getElementById('name').value;
+  let category = document.getElementById('category').value;
+  let price = document.getElementById('price').value;
+  let badge = document.getElementById('badge').value || '';
+  let desc = document.getElementById('desc').value;
+
+  const formData = new FormData();
+
+  formData.append('name', name);
+  formData.append('category', category);
+  formData.append('price', price);
+  formData.append('badge', badge);
+  formData.append('desc', desc);
+
+  if (selectedFile){
+    formData.append('image', selectedFile);
+  }
+
+  const url = id ? `${API_BASE}${id}/` : API_BASE;
+  const method = id ? 'PATCH' : 'POST';
+
+  try {
+
+    const res = await fetch(url,{
+      method: method,
+      headers:{
+        'X-CSRFToken': getCSRFToken('csrftoken')
+      },
+      body: formData
+    });
+
+    const data = await res.json();
+
+    if (data.success){
+
+      console.log(data);
+
+      closeModal();
+
+      //fetchProducts();
+
+      alert(id ? 'Product updated!' : 'Product added successfully!');
+
+    } else {
+
+      alert('Failed to save');
+      console.log(data)
+
+    }
+
+  } catch (err){
+
+    console.error(err);
+
+    alert('Connection error');
+
+  } finally {
+
+    SaveBtn.disabled = false;
+
+    SaveBtn.innerHTML = 'Save Product';
+
+  }
+}
+async function deleteProduct(id) {
+  if (confirm('Delete this product?')) {
+    await fetch(`${API_BASE}${id}/`, { method: 'DELETE' });
+    fetchProducts();
+  }
+}
+
+document.getElementById('ordersBtn').addEventListener('click', () => {
+  alert("Orders management coming soon!");
+});
+
+fetchProducts();
+</script>
+</body>
+</html>
